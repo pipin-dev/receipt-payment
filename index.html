@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Receipt Pembayaran Uang Les</title>
+
+    <!-- PDF Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 30px;
+            background: #f1f3f5;
+            font-family: "Segoe UI", Arial, sans-serif;
+            color: #2c2c2c;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+            display: grid;
+            grid-template-columns: 350px 105mm;
+            gap: 35px;
+            align-items: start;
+            justify-content: center;
+        }
+
+        /* =========================
+           FORM
+        ========================= */
+
+        .form-box {
+            background: white;
+            padding: 25px;
+            border-radius: 14px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.07);
+        }
+
+        .form-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 5px;
+        }
+
+        .form-subtitle {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 17px;
+        }
+
+        label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 7px;
+            color: #555;
+        }
+
+        input {
+            width: 100%;
+            padding: 11px 12px;
+            border: 1px solid #d5d5d5;
+            border-radius: 8px;
+            font-size: 13px;
+            outline: none;
+            background: white;
+        }
+
+        input:focus {
+            border-color: #555;
+        }
+
+        button {
+            width: 100%;
+            border: none;
+            padding: 13px;
+            border-radius: 8px;
+            background: #1f2937;
+            color: white;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #111827;
+        }
+
+        .print-btn {
+            margin-top: 10px;
+            background: white;
+            color: #1f2937;
+            border: 1px solid #d5d5d5;
+        }
+
+        .print-btn:hover {
+            background: #f8f8f8;
+        }
+
+        /* =========================
+           RECEIPT A6
+        ========================= */
+
+        .receipt {
+            width: 105mm;
+            height: 148mm;
+            background: #fff;
+            padding: 10mm;
+            border: 1px solid #cfcfcf;
+            border-radius: 12px;
+            box-shadow: 0 10px 35px rgba(0, 0, 0, .08);
+            position: relative;
+        }
+
+        .header {
+            text-align: center;
+            padding-bottom: 18px;
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        .icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 11px;
+            border-radius: 50%;
+            background: #1f2937;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            font-weight: 600;
+        }
+
+        .title {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: #1f2937;
+        }
+
+        .subtitle {
+            margin-top: 5px;
+            font-size: 10px;
+            color: #888;
+            letter-spacing: 1px;
+        }
+
+        .receipt-number {
+            margin-top: 15px;
+            font-size: 10px;
+            color: #777;
+        }
+
+        .receipt-number strong {
+            color: #333;
+        }
+
+        .section {
+            padding: 19px 0;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 15px;
+            margin-bottom: 12px;
+        }
+
+        .row:last-child {
+            margin-bottom: 0;
+        }
+
+        .label {
+            color: #888;
+            font-size: 10px;
+        }
+
+        .value {
+            font-size: 11px;
+            font-weight: 600;
+            color: #333;
+            text-align: right;
+            word-break: break-word;
+        }
+
+        .payment-box {
+            background: #f7f7f7;
+            border: 1px solid #eeeeee;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 2px 0 18px;
+        }
+
+        .amount-label {
+            font-size: 9px;
+            color: #888;
+            letter-spacing: .5px;
+            margin-bottom: 4px;
+        }
+
+        .amount {
+            font-size: 22px;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: #e8f5e9;
+            color: #2e7d32;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: .5px;
+        }
+
+        .footer {
+            border-top: 1px solid #e5e5e5;
+            padding-top: 17px;
+            text-align: center;
+        }
+
+        .thank-you {
+            font-size: 11px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .note {
+            margin-top: 5px;
+            font-size: 9px;
+            color: #999;
+            line-height: 1.5;
+        }
+
+        .signature {
+            margin-top: 20px;
+            text-align: right;
+        }
+
+        .signature-line {
+            display: inline-block;
+            width: 90px;
+            border-bottom: 1px solid #aaa;
+            margin-bottom: 5px;
+        }
+
+        .signature-name {
+            font-size: 9px;
+            color: #777;
+        }
+
+        /* =========================
+           RESPONSIVE
+        ========================= */
+
+        @media (max-width: 850px) {
+
+            body {
+                padding: 15px;
+            }
+
+            .container {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .form-box {
+                width: 100%;
+                max-width: 420px;
+            }
+
+            .receipt {
+                width: 105mm;
+            }
+        }
+
+        /* =========================
+           PRINT
+        ========================= */
+
+        @media print {
+
+            @page {
+                size: A6 portrait;
+                margin: 0;
+            }
+
+            html,
+            body {
+                width: 105mm;
+                height: 148mm;
+                margin: 0;
+                padding: 0;
+                background: white !important;
+            }
+
+            .container {
+                display: block;
+                width: 105mm;
+                height: 148mm;
+                margin: 0;
+                padding: 0;
+            }
+
+            .form-box {
+                display: none !important;
+            }
+
+            .receipt {
+                display: block;
+                width: 105mm !important;
+                height: 148mm !important;
+                min-height: 148mm !important;
+                margin: 0 !important;
+                padding: 10mm !important;
+
+                background: #fff !important;
+                border: 1px solid #cfcfcf !important;
+                border-radius: 12px !important;
+
+                box-shadow: 0 4px 15px rgba(0, 0, 0, .08) !important;
+
+                overflow: hidden;
+
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            .payment-box {
+                background: #f7f7f7 !important;
+                border: 1px solid #eee !important;
+
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            .icon {
+                background: #1f2937 !important;
+                color: white !important;
+
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            .status {
+                background: #e8f5e9 !important;
+                color: #2e7d32 !important;
+
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- =========================
+         FORM INPUT
+    ========================= -->
+
+    <div class="form-box">
+
+        <div class="form-title">
+            Receipt Pembayaran
+        </div>
+
+        <div class="form-subtitle">
+            Isi data pembayaran di bawah
+        </div>
+
+        <div class="form-group">
+            <label>Nama Siswa</label>
+            <input
+                type="text"
+                id="inputNama"
+                placeholder="Contoh: Andi Pratama">
+        </div>
+
+        <div class="form-group">
+            <label>Nama Penerima Pembayaran</label>
+            <input
+                type="text"
+                id="inputPenerima"
+                placeholder="Contoh: Budi">
+        </div>
+
+        <div class="form-group">
+            <label>Tanggal Pembayaran</label>
+            <input
+                type="date"
+                id="inputTanggal">
+        </div>
+
+        <div class="form-group">
+            <label>Nominal Pembayaran</label>
+            <input
+                type="number"
+                id="inputNominal"
+                placeholder="Contoh: 1500000"
+                min="0">
+        </div>
+
+        <div class="form-group">
+            <label>Periode</label>
+            <input
+                type="text"
+                id="inputPeriode"
+                placeholder="Contoh: September 2026">
+        </div>
+
+        <button onclick="generateReceipt()">
+            Generate Receipt
+        </button>
+
+        <button
+            class="print-btn"
+            onclick="downloadPDF()">
+            📄 Download PDF A6
+        </button>
+    </div>
+
+
+    <!-- =========================
+         RECEIPT
+    ========================= -->
+
+    <div class="receipt" id="receipt">
+
+        <div class="header">
+
+            <div class="icon">
+                ✓
+            </div>
+
+            <div class="title">
+                PAYMENT RECEIPT
+            </div>
+
+            <div class="subtitle">
+                PEMBAYARAN UANG LES
+            </div>
+
+            <div class="receipt-number">
+                Receipt No.
+                <strong id="receiptNo">-</strong>
+            </div>
+
+        </div>
+
+
+        <div class="section">
+
+            <div class="row">
+                <div class="label">
+                    Nama Siswa
+                </div>
+
+                <div
+                    class="value"
+                    id="studentName">
+                    -
+                </div>
+            </div>
+
+
+            <div class="row">
+                <div class="label">
+                    Tanggal Pembayaran
+                </div>
+
+                <div
+                    class="value"
+                    id="paymentDate">
+                    -
+                </div>
+            </div>
+
+
+            <div class="row">
+                <div class="label">
+                    Periode
+                </div>
+
+                <div
+                    class="value"
+                    id="period">
+                    -
+                </div>
+            </div>
+
+
+            <div class="row">
+
+                <div class="label">
+                    Status
+                </div>
+
+                <div class="value">
+                    <span class="status">
+                        PAID
+                    </span>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- PAYMENT -->
+
+        <div class="payment-box">
+
+            <div class="amount-label">
+                JUMLAH PEMBAYARAN
+            </div>
+
+            <div
+                class="amount"
+                id="amount">
+                Rp0
+            </div>
+
+        </div>
+
+
+        <!-- DETAIL -->
+
+        <div
+            class="section"
+            style="padding-top:0;">
+
+            <div class="row">
+
+                <div class="label">
+                    Jenis Pembayaran
+                </div>
+
+                <div class="value">
+                    Uang Les
+                </div>
+
+            </div>
+
+
+            <div class="row">
+
+                <div class="label">
+                    Metode Pembayaran
+                </div>
+
+                <div class="value">
+                    Transfer / Cash
+                </div>
+
+            </div>
+
+            <div class="row">
+
+                <div class="label">
+                    Nama Penerima
+                </div>
+
+                <div
+                    class="value"
+                    id="recipientName">
+                    -
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- FOOTER -->
+
+        <div class="footer">
+
+            <div class="thank-you">
+                Terima kasih atas pembayarannya.
+            </div>
+
+            <div class="note">
+                Receipt ini merupakan bukti pembayaran yang sah.
+            </div>
+
+
+            <div class="signature">
+
+                <div class="signature-line"></div>
+
+                <br>
+
+                <div class="signature-name">
+                    Pengajar
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+    let currentReceiptNumber = "";
+
+
+    /* =========================================
+       GENERATE RECEIPT
+    ========================================= */
+
+    function generateReceipt() {
+
+        const nama =
+            document.getElementById("inputNama")
+                .value
+                .trim();
+
+        const penerima =
+            document.getElementById("inputPenerima")
+                .value
+                .trim();
+
+        const tanggal =
+            document.getElementById("inputTanggal")
+                .value;
+
+        const nominal =
+            document.getElementById("inputNominal")
+                .value;
+
+        const periode =
+            document.getElementById("inputPeriode")
+                .value
+                .trim();
+
+
+        if (
+            !nama ||
+            !penerima ||
+            !tanggal ||
+            !nominal ||
+            !periode
+        ) {
+
+            alert(
+                "Mohon isi semua data terlebih dahulu."
+            );
+
+            return false;
+        }
+
+
+        /* Nama Siswa */
+
+        document.getElementById(
+            "studentName"
+        ).textContent = nama;
+
+        /* Nama Penerima Pembayaran */
+
+        document.getElementById(
+            "recipientName"
+        ).textContent = penerima;
+
+
+        /* Tanggal */
+
+        const date =
+            new Date(
+                tanggal + "T00:00:00"
+            );
+
+        const formattedDate =
+            date.toLocaleDateString(
+                "id-ID",
+                {
+                    day: "2-digit",
+                    month: "long",
+                    year: "numeric"
+                }
+            );
+
+        document.getElementById(
+            "paymentDate"
+        ).textContent = formattedDate;
+
+
+        /* Periode */
+
+        document.getElementById(
+            "period"
+        ).textContent = periode;
+
+
+        /* Nominal */
+
+        const formattedAmount =
+            new Intl.NumberFormat(
+                "id-ID",
+                {
+                    style: "currency",
+                    currency: "IDR",
+                    maximumFractionDigits: 0
+                }
+            ).format(
+                Number(nominal)
+            );
+
+        document.getElementById(
+            "amount"
+        ).textContent = formattedAmount;
+
+
+        /* Receipt Number */
+
+        if (!currentReceiptNumber) {
+
+            const random =
+                Math.floor(
+                    1000 +
+                    Math.random() * 9000
+                );
+
+            currentReceiptNumber =
+                "LES-" +
+                tanggal.replaceAll("-", "") +
+                "-" +
+                random;
+        }
+
+        document.getElementById(
+            "receiptNo"
+        ).textContent =
+            currentReceiptNumber;
+
+
+        return true;
+    }
+
+
+    /* =========================================
+       DOWNLOAD PDF A6
+    ========================================= */
+
+    async function downloadPDF() {
+
+        const success =
+            generateReceipt();
+
+        if (!success) {
+            return;
+        }
+
+
+        const receipt =
+            document.getElementById(
+                "receipt"
+            );
+
+
+        try {
+
+            const canvas =
+                await html2canvas(
+                    receipt,
+                    {
+                        scale: 3,
+                        useCORS: true,
+                        backgroundColor: "#ffffff",
+                        logging: false
+                    }
+                );
+
+
+            const imageData =
+                canvas.toDataURL(
+                    "image/png",
+                    1.0
+                );
+
+
+            const {
+                jsPDF
+            } = window.jspdf;
+
+
+            const pdf =
+                new jsPDF(
+                    {
+                        orientation: "portrait",
+                        unit: "mm",
+                        format: "a6",
+                        compress: true
+                    }
+                );
+
+
+            /*
+             * A6:
+             * Width  = 105mm
+             * Height = 148mm
+             */
+
+            pdf.addImage(
+                imageData,
+                "PNG",
+                0,
+                0,
+                105,
+                148,
+                undefined,
+                "FAST"
+            );
+
+
+            /* Nama file */
+
+            const nama =
+                document.getElementById(
+                    "inputNama"
+                ).value.trim();
+
+
+            const safeName =
+                nama
+                    .replace(
+                        /[^a-z0-9\s_-]/gi,
+                        ""
+                    )
+                    .replace(
+                        /\s+/g,
+                        "_"
+                    );
+
+
+            const fileName =
+                "Receipt_Les_" +
+                safeName +
+                ".pdf";
+
+
+            pdf.save(fileName);
+
+        } catch (error) {
+
+            console.error(error);
+
+            alert(
+                "Gagal membuat PDF. Silakan coba lagi."
+            );
+        }
+    }
+
+
+    /* =========================================
+       SHARE WHATSAPP
+    ========================================= */
+
+ 
+
+
+    /* =========================================
+       PRINT BROWSER
+       Optional
+    ========================================= */
+
+    function printReceipt() {
+
+        const name =
+            document.getElementById(
+                "studentName"
+            ).textContent;
+
+
+        if (
+            !name ||
+            name === "-"
+        ) {
+
+            alert(
+                "Generate receipt terlebih dahulu."
+            );
+
+            return;
+        }
+
+
+        window.print();
+    }
+
+</script>
+
+</body>
+</html>
